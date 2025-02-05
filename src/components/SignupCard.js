@@ -1,16 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axiosInstance from "../services/AxiosInstance";
 
 const SignupCard = ({ setIsSignUp }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [organization, setOrganization] = useState("");
+  const [organizationList , setOrganizationList] = useState([]); 
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
+    
     console.log("Signup --", email, organization);
+    
+    try {
+      const response = await axiosInstance.post('register-user', {
+          email,
+          password,
+          organizationId: organization
+      });
+
+      console.log('User registered:', response.data);
+     
+  } catch (error) {
+      console.error('Error registering user:', error.response?.data || error.message);
+  }
+
+
   };
 
-  const organizations = ["Organization 1", "Organization 2", "Organization 3"];
+  
+  const getOrganisations = async()=>{
+    try{
+      const response = await axiosInstance.get("/organizations");
+      setOrganizationList(response.data.organizations);
+    }catch(error)
+    {
+      console.log(error);
+    }
+  } 
+   
+  useEffect(()=>{
+    getOrganisations();
 
+  },[]);
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg">
       <h2 className="text-2xl font-semibold text-center mb-6">Sign Up</h2>
@@ -66,9 +97,9 @@ const SignupCard = ({ setIsSignUp }) => {
             required
           >
             <option value="">Select Organization</option>
-            {organizations.map((org, index) => (
-              <option key={index} value={org}>
-                {org}
+            {organizationList.map((org, index) => (
+              <option key={index} value={org.id}>
+                {org.name}
               </option>
             ))}
           </select>
@@ -84,7 +115,7 @@ const SignupCard = ({ setIsSignUp }) => {
       <div className="text-center mt-4">
         <button
           className="text-blue-500 hover:text-blue-600"
-          onClick={() => setIsSignUp(false)}
+          onClick={() => {  setIsSignUp(false)}}
         >
           Already have an account? Login
         </button>
