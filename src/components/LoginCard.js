@@ -1,15 +1,37 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import axiosInstance from "../services/AxiosInstance";
+import { CgSpinner } from "react-icons/cg";
 
 const LoginCard = ({ setIsSignUp }) => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  const handleSubmit = () => {
-    console.log("Loging ", email);
-    navigate("/dashboard");
+    try {
+      const response = await axiosInstance.post("/login", {
+        email,
+        password,
+      });
+
+      localStorage.setItem("accessToken", response?.data?.token);
+
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error(error.response?.data.error || "something went wrong");
+      console.error(
+        "Error registering user:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -21,7 +43,7 @@ const LoginCard = ({ setIsSignUp }) => {
             htmlFor="email"
             className="block text-sm font-medium text-gray-600 mb-2"
           >
-            Email
+            Email <span className="text-red-600 ml-1">*</span>
           </label>
           <input
             type="email"
@@ -39,7 +61,7 @@ const LoginCard = ({ setIsSignUp }) => {
             htmlFor="password"
             className="block text-sm font-medium text-gray-600 mb-2"
           >
-            Password
+            Password <span className="text-red-600 ml-1">*</span>
           </label>
           <input
             type="password"
@@ -54,9 +76,13 @@ const LoginCard = ({ setIsSignUp }) => {
 
         <button
           type="submit"
-          className="w-full py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition duration-200"
+          className="w-full flex justify-center py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition duration-200"
         >
-          Login
+          {isLoading ? (
+            <CgSpinner className="w-7 h-7 animate-spin text-white" />
+          ) : (
+            "Login"
+          )}
         </button>
       </form>
       <div className="text-center mt-4">
