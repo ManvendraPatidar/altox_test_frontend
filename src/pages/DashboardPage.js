@@ -138,7 +138,7 @@ const DashboardPage = () => {
                 <th className="px-2 py-2 sm:px-6 sm:py-3">
                   {" "}
                   <div className="h-full w-full flex justify-center">
-                    Like / Unlike
+                    Like / Dislike
                   </div>
                 </th>
               </tr>
@@ -190,9 +190,9 @@ const DashboardPage = () => {
                           className={`px-6 py-2 w-20 rounded-lg text-white hover:bg-opacity-80`}
                         >
                           {likedPokemons.has(pokemon.id) ? (
-                            <FaThumbsUp size={25} color="black" />
+                            <FaThumbsUp size={25} color="#173455" />
                           ) : (
-                            <FaRegThumbsUp color="black" size={25} />
+                            <FaRegThumbsUp color="#173455" size={25} />
                           )}
                         </button>
                       </div>
@@ -245,7 +245,7 @@ const DashboardPage = () => {
                   onClick={() => setCurrentPage(page + 1)}
                   className={`px-4 py-2  w-12 ${
                     currentPage === page + 1
-                      ? "bg-blue-600 text-white"
+                      ? "bg-blue-950 text-white"
                       : "bg-gray-200 text-gray-800"
                   } hover:bg-blue-200`}
                 >
