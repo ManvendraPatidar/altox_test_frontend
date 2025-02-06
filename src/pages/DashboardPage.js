@@ -16,13 +16,39 @@ const DashboardPage = () => {
   const { user } = useContext(AuthContext);
   const [currentPage, setCurrentPage] = useState(1);
   const [likedPokemons, setLikedPokemons] = useState(new Set());
+  const [dislikedPokemons, setDislikedPokemons] = useState(new Set());
   const [totalPages, setTotalPages] = useState();
   const itemsPerPage = 6;
   const [isLoading, setIsLoading] = useState(false);
   const [showModel, setShowModel] = useState(false);
 
-  const handleLikeToggle = (id) => {
-    likedPokemons.has(id) ? disLike(id) : addLike(id);
+  const handleLikeDislikeToggle = (id, type) => {
+    if (type === "like") {
+      if (likedPokemons.has(id)) {
+        removeLike(id);
+      } else {
+        addLike(id);
+        if (dislikedPokemons.has(id)) {
+          removeDislike(id);
+          dislikedPokemons.delete(id);
+        }
+
+        setDislikedPokemons(new Set(dislikedPokemons));
+      }
+    } else if (type === "dislike") {
+      if (dislikedPokemons.has(id)) {
+        removeDislike(id);
+      } else {
+        addDislike(id);
+
+        if (likedPokemons.has(id)) {
+          removeLike(id);
+          likedPokemons.delete(id);
+        }
+
+        setLikedPokemons(new Set(likedPokemons));
+      }
+    }
   };
 
   const handleNextPage = () => {
@@ -47,9 +73,15 @@ const DashboardPage = () => {
         setPokemons(response?.data?.pokemons);
         setTotalPages(response?.data?.totalPages);
 
-        setLikedPokemons((prevLikes) => {
+        setLikedPokemons(() => {
           const likedList = getLikedIds(response?.data?.pokemons);
           const newLikes = new Set(likedList);
+          return newLikes;
+        });
+
+        setDislikedPokemons(() => {
+          const DislikedList = getDislikedIds(response?.data?.pokemons);
+          const newLikes = new Set(DislikedList);
           return newLikes;
         });
       }
@@ -62,6 +94,10 @@ const DashboardPage = () => {
 
   const getLikedIds = (data) => {
     return data.filter((item) => item.isLiked).map((item) => item.id);
+  };
+
+  const getDislikedIds = (data) => {
+    return data.filter((item) => item.isDisliked).map((item) => item.id);
   };
 
   const addLike = async (id) => {
@@ -81,13 +117,47 @@ const DashboardPage = () => {
     }
   };
 
-  const disLike = async (id) => {
+  const removeLike = async (id) => {
     try {
       await axiosInstance.post("remove-favorite-pokemon", {
         pokemonId: id,
       });
 
       setLikedPokemons((prevLikes) => {
+        const newLikes = new Set(prevLikes);
+        newLikes.delete(id);
+        return newLikes;
+      });
+    } catch (err) {
+      toast.error("Something went wrong!!");
+      console.error("Error in dislike pokemons", err);
+    }
+  };
+
+  const addDislike = async (id) => {
+    try {
+      await axiosInstance.post("dislike-pokemon", {
+        pokemonId: id,
+      });
+
+      setDislikedPokemons((prevLikes) => {
+        const newLikes = new Set(prevLikes);
+        newLikes.add(id);
+        return newLikes;
+      });
+    } catch (err) {
+      toast.error("Something went wrong!!");
+      console.error("Error in like pokemons", err);
+    }
+  };
+
+  const removeDislike = async (id) => {
+    try {
+      await axiosInstance.post("remove-dislike-pokemon", {
+        pokemonId: id,
+      });
+
+      setDislikedPokemons((prevLikes) => {
         const newLikes = new Set(prevLikes);
         newLikes.delete(id);
         return newLikes;
@@ -184,15 +254,42 @@ const DashboardPage = () => {
                       </div>
                     </td>
                     <td className="px-2 py-4">
-                      <div className="h-full w-full flex justify-center">
+                      <div className="h-full w-full flex justify-center space-x-2">
+                        {/* Like Button */}
                         <button
-                          onClick={() => handleLikeToggle(pokemon?.id)}
-                          className={`px-6 py-2 w-20 rounded-lg text-white hover:bg-opacity-80`}
+                          onClick={() =>
+                            handleLikeDislikeToggle(pokemon.id, "like")
+                          }
                         >
                           {likedPokemons.has(pokemon.id) ? (
-                            <FaThumbsUp size={25} color="#173455" />
+                            <FaThumbsUp
+                              size={25}
+                              className="text-blue-950 scale-110"
+                            />
                           ) : (
-                            <FaRegThumbsUp color="#173455" size={25} />
+                            <FaRegThumbsUp
+                              size={25}
+                              className="text-gray-950"
+                            />
+                          )}
+                        </button>
+
+                        {/* Dislike Button */}
+                        <button
+                          onClick={() =>
+                            handleLikeDislikeToggle(pokemon.id, "dislike")
+                          }
+                        >
+                          {dislikedPokemons.has(pokemon.id) ? (
+                            <FaThumbsUp
+                              size={25}
+                              className="text-blue-950 scale-110 rotate-180"
+                            />
+                          ) : (
+                            <FaRegThumbsUp
+                              size={25}
+                              className="text-blue-950 rotate-180"
+                            />
                           )}
                         </button>
                       </div>
